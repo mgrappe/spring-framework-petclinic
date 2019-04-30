@@ -49,21 +49,22 @@ pipeline {
                 }
             }
         }
-        stage('Run Test image') {
+        stage('Parallel Stage Prod') {
+        parallel{
+        stage ('Run Test Image'){
             steps{
-                script{
-                    value = "docker ps --all --quiet --filter=name=petclinic-test"
-                     def val= sh (returnStdout: true, script: command)
-                   //def value = "docker ps --all --quiet --filter=name='petclinic-test'".execute()
-                   //echo "value = $value.text"
-                   if ($val.text)
-                   {
-                     def stop_container="docker stop petclinic-test".execute()
-                     def rm_container="docker rm petclinic-test".execute()
-                   }
-                }
-                sh 'docker run -d --name petclinic-test -p 8090:8080 petclinic-project'
+                sh "docker stop petclinic-test && docker rm petclinic-test"
+                sh 'docker run -d --name petclinic-test -p 8090:8080 petclinic-prod'
             }
+        }
+        stage ('Run uat image'){
+            steps{
+                sh "docker stop petclinic-uat && docker rm petclinic-uat"
+                sh 'docker run -d --name petclinic-uat -p 8190:8080 petclinic-prod'
+            }
+        }
+
+        }
         }
 
 
